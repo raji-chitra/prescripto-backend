@@ -11,7 +11,7 @@ const app = express();
 connectDB();
 
 // Middleware
-app.use(cors());   // ⭐ FIXED FOR RENDER
+app.use(cors());   // ⭐ Works for both local & Render
 app.use(express.json());
 
 // Serve static files from uploads directory
@@ -25,37 +25,51 @@ app.use('/api/admin', require('./routes/admin'));
 
 // Test route
 app.get('/api/test', (req, res) => {
-    res.json({ 
+    res.json({
         success: true,
-        message: 'Server is running!', 
-        database: 'MongoDB Connected' 
+        message: 'Server is running!',
+        database: 'MongoDB Connected'
     });
 });
 
 // Health check
 app.get('/api/health', (req, res) => {
-    res.json({ 
+    res.json({
         success: true,
-        status: 'OK', 
-        timestamp: new Date().toISOString() 
+        status: 'OK',
+        timestamp: new Date().toISOString()
     });
 });
 
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, async () => {
     console.log(`🚀 Server running on port ${PORT}`);
 
     try {
-        const adminEmail = ((process.env.ADMIN_EMAIL || 'rajalakshmi@gmail.com') + '').trim().toLowerCase();
-        const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
+        // ⭐ Updated to use DEFAULT_ADMIN_EMAIL & DEFAULT_ADMIN_PASSWORD
+        const adminEmail =
+            ((process.env.DEFAULT_ADMIN_EMAIL || 'rajalakshmi@gmail.com') + '')
+            .trim()
+            .toLowerCase();
+
+        const adminPassword =
+            process.env.DEFAULT_ADMIN_PASSWORD || 'admin123';
 
         if (!validator.isEmail(adminEmail)) {
-            throw new Error(`Invalid ADMIN_EMAIL provided: ${adminEmail}`);
+            throw new Error(`Invalid DEFAULT_ADMIN_EMAIL provided: ${adminEmail}`);
         }
 
         let admin = await User.findOne({ email: adminEmail });
+
         if (!admin) {
-            admin = new User({ name: 'Admin', email: adminEmail, password: adminPassword, role: 'admin' });
+            admin = new User({
+                name: 'Admin',
+                email: adminEmail,
+                password: adminPassword,
+                role: 'admin'
+            });
+
             await admin.save();
             console.log('✅ Default admin ensured:', adminEmail);
         }
